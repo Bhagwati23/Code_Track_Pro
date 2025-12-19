@@ -154,7 +154,7 @@ Feel free to open issues for bugs, features, or improvements.
 ## 📬 Contact
 
 If you have questions or suggestions, feel free to reach out:
-**GitHub:** [https://github.com/manojk909](https://github.com/Bhagwati23)
+**GitHub:** [https://github.com/Bhagwati23](https://github.com/Bhagwati23)
 
 ---
 
