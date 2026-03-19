@@ -333,7 +333,7 @@ class CodingTracker:
             return None
     
     def _scrape_geeksforgeeks_data(self, username):
-    """Scrape GeeksforGeeks data using enhanced web scraping with HTML parsing"""
+        """Scrape GeeksforGeeks data using enhanced web scraping with HTML parsing"""
         try:
             import re
             import requests
