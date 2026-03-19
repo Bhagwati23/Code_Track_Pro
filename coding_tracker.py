@@ -362,14 +362,9 @@ class CodingTracker:
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
-
-        # IMPORTANT for Render
-        options.binary_location = "/usr/bin/chromium-browser"
-
-        driver = webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()),
-            options=options
-        )
+        options.add_argument("--remote-debugging-port=9222")
+        
+        driver = webdriver.Chrome(options=options)
 
         url = f"https://www.geeksforgeeks.org/user/{username}/"
         driver.get(url)
