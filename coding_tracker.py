@@ -433,8 +433,8 @@ class CodingTracker:
                 scripts = soup.find_all("script")
     
                 for script in scripts:
-                    if script.string and "total_problems_solved" in script.string:
-                        data_text = script.string
+                    script_content = script.string if script.string else script.text
+                    if script_content and "total_problems_solved" in script_content:
     
                         total_match = re.search(r'"total_problems_solved":(\d+)', data_text)
                         easy_match = re.search(r'"easy_questions_solved":(\d+)', data_text)
