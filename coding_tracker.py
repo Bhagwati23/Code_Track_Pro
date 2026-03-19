@@ -333,170 +333,171 @@ class CodingTracker:
             return None
     
     def _scrape_geeksforgeeks_data(self, username):
-        """Scrape GeeksforGeeks data using enhanced web scraping with HTML parsing"""
+    """Scrape GeeksforGeeks data using enhanced web scraping with HTML parsing"""
+    try:
+        import re
+        import requests
+        from bs4 import BeautifulSoup
+
+        # ---------------- USERNAME CLEANING ----------------
+        original_username = username
+        if 'geeksforgeeks.org' in username:
+            if '/user/' in username:
+                username = username.split('/user/')[-1].split('/')[0]
+            elif '/profile/' in username:
+                username = username.split('/profile/')[-1].split('/')[0]
+            username = username.rstrip('/').split('/')[0]
+
+        if username.startswith('http'):
+            username = username.replace('https://', '').replace('http://', '').replace('www.', '')
+            username = username.split('/')[0] if '/' in username else username
+
+        username = username.strip()
+
+        if not username or username in ['https:', 'http:', ''] or len(username) < 2:
+            raise Exception(f"Invalid username after cleaning: '{original_username}' -> '{username}'")
+
+        print(f"Extracting data for GeeksforGeeks user: {username}")
+
+        # ---------------- URLS ----------------
+        urls_to_try = [
+            f"https://auth.geeksforgeeks.org/user/{username}/",
+            f"https://auth.geeksforgeeks.org/user/{username}/practice/",
+            f"https://www.geeksforgeeks.org/user/{username}/"
+        ]
+
+        headers = {
+            'User-Agent': 'Mozilla/5.0',
+            'Accept-Language': 'en-US,en;q=0.9'
+        }
+
+        session = requests.Session()
+        soup = None
+        html_text = ""
+
+        # ---------------- FETCH PAGE ----------------
+        for url in urls_to_try:
+            try:
+                print(f"Trying URL: {url}")
+                response = session.get(url, headers=headers, timeout=20)
+
+                if response.status_code == 200:
+                    html_text = response.text
+                    soup = BeautifulSoup(html_text, 'html.parser')
+                    print(f"Loaded: {url}")
+                    break
+            except Exception as e:
+                print(f"Error: {e}")
+                continue
+
+        if soup is None:
+            raise Exception(f"Could not access profile for '{username}'")
+
+        # ---------------- INITIALIZE ----------------
+        total_problems = 0
+        easy_solved = 0
+        medium_solved = 0
+        hard_solved = 0
+        basic_solved = 0
+        streak = 0
+        rank = 0
+
+        # ---------------- METHOD 1 (OLD SELECTORS - KEEPED) ----------------
         try:
-            import re
-            import requests
-            from bs4 import BeautifulSoup
-    
-            # ---------------- USERNAME CLEANING (UNCHANGED) ----------------
-            original_username = username
-            if 'geeksforgeeks.org' in username:
-                if '/user/' in username:
-                    username = username.split('/user/')[-1].split('/')[0]
-                elif '/profile/' in username:
-                    username = username.split('/profile/')[-1].split('/')[0]
-                username = username.rstrip('/').split('/')[0]
-    
-            if username.startswith('http'):
-                username = username.replace('https://', '').replace('http://', '').replace('www.', '')
-                username = username.split('/')[0] if '/' in username else username
-    
-            username = username.strip()
-    
-            if not username or username in ['https:', 'http:', ''] or len(username) < 2:
-                raise Exception(f"Invalid username after cleaning: '{original_username}' -> '{username}'")
-    
-            print(f"Extracting data for GeeksforGeeks user: {username}")
-    
-            # ---------------- UPDATED URLS ----------------
-            urls_to_try = [
-                f"https://auth.geeksforgeeks.org/user/{username}/",
-                f"https://auth.geeksforgeeks.org/user/{username}/practice/",
-                f"https://www.geeksforgeeks.org/user/{username}/"
-            ]
-    
-            headers = {
-                'User-Agent': 'Mozilla/5.0',
-                'Accept-Language': 'en-US,en;q=0.9'
-            }
-    
-            session = requests.Session()
-            soup = None
-            html_text = ""
-    
-            # ---------------- FETCH PAGE ----------------
-            for url in urls_to_try:
-                try:
-                    print(f"Trying URL: {url}")
-                    response = session.get(url, headers=headers, timeout=20)
-    
-                    if response.status_code == 200:
-                        html_text = response.text
-                        soup = BeautifulSoup(html_text, 'html.parser')
-                        print(f"Loaded: {url}")
-                        break
-                except Exception as e:
-                    print(f"Error: {e}")
-                    continue
-    
-            if soup is None:
-                raise Exception(f"Could not access profile for '{username}'")
-    
-            # ---------------- INITIALIZE ----------------
-            total_problems = 0
-            easy_solved = 0
-            medium_solved = 0
-            hard_solved = 0
-            basic_solved = 0
-            streak = 0
-            rank = 0
-    
-            # ---------------- METHOD 1 (UPDATED SELECTORS) ----------------
-            try:
-                print("Trying updated selectors...")
-    
-                # NEW flexible selector (React classes change often)
-                score_cards = soup.select('[class*="scoreCard"]')
-    
-                for card in score_cards:
-                    text = card.get_text(" ", strip=True).lower()
-    
-                    if "problem solved" in text:
-                        match = re.search(r'(\d+)', text)
-                        if match:
-                            total_problems = int(match.group(1))
-                            print(f"Total problems: {total_problems}")
-                            break
-    
-            except Exception as e:
-                print(f"Selector error: {e}")
-    
-            # ---------------- METHOD 2 (REGEX FALLBACK - IMPORTANT) ----------------
-            try:
-                if total_problems == 0:
-                    print("Using regex fallback...")
-    
-                    match = re.search(r'problem\s*solved[^0-9]*(\d+)', html_text.lower())
-                    if match:
-                        total_problems = int(match.group(1))
-                        print(f"Regex total problems: {total_problems}")
-            except Exception as e:
-                print(f"Regex error: {e}")
-    
-            # ---------------- DIFFICULTY BREAKDOWN ----------------
-            try:
-                difficulty_patterns = {
-                    'basic': r'basic[^0-9]*(\d+)',
-                    'easy': r'easy[^0-9]*(\d+)',
-                    'medium': r'medium[^0-9]*(\d+)',
-                    'hard': r'hard[^0-9]*(\d+)'
-                }
-    
-                for key, pattern in difficulty_patterns.items():
-                    match = re.search(pattern, html_text.lower())
-                    if match:
-                        value = int(match.group(1))
-                        if key == 'basic':
-                            basic_solved = value
-                        elif key == 'easy':
-                            easy_solved = value
-                        elif key == 'medium':
-                            medium_solved = value
-                        elif key == 'hard':
-                            hard_solved = value
-    
-                print(f"Difficulty: B={basic_solved}, E={easy_solved}, M={medium_solved}, H={hard_solved}")
-    
-            except Exception as e:
-                print(f"Difficulty error: {e}")
-    
-            # ---------------- STREAK ----------------
-            try:
-                match = re.search(r'streak[^0-9]*(\d+)', html_text.lower())
-                if match:
-                    streak = int(match.group(1))
-                    print(f"Streak: {streak}")
-            except:
-                pass
-    
-            # ---------------- RANK ----------------
-            try:
-                match = re.search(r'rank[^0-9]*(\d+)', html_text.lower())
-                if match:
-                    rank = int(match.group(1))
-                    print(f"Rank: {rank}")
-            except:
-                pass
-    
-            # ---------------- FINAL FIX ----------------
-            if total_problems == 0:
-                total_problems = basic_solved + easy_solved + medium_solved + hard_solved
-    
-            print(f"FINAL: Total={total_problems}")
-    
-            return {
-                'total_problems': total_problems,
-                'basic_solved': basic_solved,
-                'easy_solved': easy_solved,
-                'medium_solved': medium_solved,
-                'hard_solved': hard_solved,
-                'contest_rating': rank,
-                'streak': streak
-            }
-    
+            print("Trying old selectors...")
+
+            score_cards = soup.find_all('div', {'class': 'scoreCard_head__nxXR8'})
+
+            for i, card in enumerate(score_cards):
+                if hasattr(card, 'find'):
+                    text_element = card.find('div', {'class': 'scoreCard_head_left--text__KZ2S1'})
+                    if text_element:
+                        text_content = text_element.get_text().strip()
+
+                        if 'Problem Solved' in text_content:
+                            score_element = card.find('div', {'class': 'scoreCard_head_left--score__oSi_x'})
+                            if score_element:
+                                try:
+                                    total_problems = int(score_element.get_text().strip())
+                                    print(f"Old selector total: {total_problems}")
+                                    break
+                                except:
+                                    pass
         except Exception as e:
-            raise Exception(f"GFG scraping failed: {str(e)}")
+            print(f"Old selector error: {e}")
+
+        # ---------------- METHOD 2 (NEXT.JS FIX - MAIN PART) ----------------
+        try:
+            print("Extracting from Next.js script...")
+
+            scripts = soup.find_all("script")
+
+            for script in scripts:
+                if script.string and "total_problems_solved" in script.string:
+                    data_text = script.string
+
+                    total_match = re.search(r'"total_problems_solved":(\d+)', data_text)
+                    easy_match = re.search(r'"easy_questions_solved":(\d+)', data_text)
+                    medium_match = re.search(r'"medium_questions_solved":(\d+)', data_text)
+                    hard_match = re.search(r'"hard_questions_solved":(\d+)', data_text)
+                    basic_match = re.search(r'"school_questions_solved":(\d+)', data_text)
+                    streak_match = re.search(r'"pod_solved_current_streak":(\d+)', data_text)
+                    score_match = re.search(r'"score":(\d+)', data_text)
+
+                    if total_match:
+                        total_problems = int(total_match.group(1))
+                        print(f"Next.js total: {total_problems}")
+
+                    if easy_match:
+                        easy_solved = int(easy_match.group(1))
+
+                    if medium_match:
+                        medium_solved = int(medium_match.group(1))
+
+                    if hard_match:
+                        hard_solved = int(hard_match.group(1))
+
+                    if basic_match:
+                        basic_solved = int(basic_match.group(1))
+
+                    if streak_match:
+                        streak = int(streak_match.group(1))
+
+                    if score_match:
+                        rank = int(score_match.group(1))
+
+                    break
+
+        except Exception as e:
+            print(f"Next.js extraction error: {e}")
+
+        # ---------------- FALLBACK REGEX ----------------
+        try:
+            if total_problems == 0:
+                match = re.search(r'problem\s*solved[^0-9]*(\d+)', html_text.lower())
+                if match:
+                    total_problems = int(match.group(1))
+        except:
+            pass
+
+        # ---------------- FINAL FIX ----------------
+        if total_problems == 0:
+            total_problems = basic_solved + easy_solved + medium_solved + hard_solved
+
+        print(f"FINAL: Total={total_problems}")
+
+        return {
+            'total_problems': total_problems,
+            'basic_solved': basic_solved,
+            'easy_solved': easy_solved,
+            'medium_solved': medium_solved,
+            'hard_solved': hard_solved,
+            'contest_rating': rank,
+            'streak': streak
+        }
+
+    except Exception as e:
+        raise Exception(f"GFG scraping failed: {str(e)}")
     
     def _scrape_github_data(self, username):
         """Scrape GitHub data using GitHub API - showing repository and contribution stats"""
