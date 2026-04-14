@@ -333,135 +333,171 @@ class CodingTracker:
             return None
     
     def _scrape_geeksforgeeks_data(self, username):
-    """Scrape GeeksforGeeks using Selenium (activity tab + longest streak)"""
-    try:
-        import re
-        import time
-        from selenium import webdriver
-        from selenium.webdriver.chrome.options import Options
-        from selenium.webdriver.common.by import By
-        from selenium.webdriver.support.ui import WebDriverWait
-        from selenium.webdriver.support import expected_conditions as EC
-
-        # -------- USERNAME / URL CLEAN --------
-        if "geeksforgeeks.org" in username:
-            if "/profile/" in username:
-                username = username.split("/profile/")[-1].split("?")[0].split("/")[0]
-            elif "/user/" in username:
-                username = username.split("/user/")[-1].split("?")[0].split("/")[0]
-
-        username = username.strip()
-
-        if not username or len(username) < 2:
-            raise Exception("Invalid username")
-
-        print(f"Scraping GFG for: {username}")
-
-        # -------- BUILD ACTIVITY URL --------
-        url = f"https://www.geeksforgeeks.org/profile/{username}?tab=activity"
-
-        # -------- CHROME OPTIONS --------
-        options = Options()
-        options.add_argument("--headless=new")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--disable-gpu")
-
-        driver = webdriver.Chrome(options=options)
-        wait = WebDriverWait(driver, 20)
-
+        """Scrape GeeksforGeeks using Selenium (activity tab + longest streak)"""
         try:
-            driver.get(url)
-
-            # wait until coding stats section loads
-            wait.until(
-                EC.presence_of_element_located(
-                    (By.XPATH, "//*[contains(text(),'Problems Breakdown')]")
+            import re
+            import time
+            from selenium import webdriver
+            from selenium.webdriver.chrome.options import Options
+            from selenium.webdriver.common.by import By
+            from selenium.webdriver.support.ui import WebDriverWait
+            from selenium.webdriver.support import expected_conditions as EC
+    
+            # -------- USERNAME / URL CLEAN --------
+            if "geeksforgeeks.org" in username:
+                if "/profile/" in username:
+                    username = username.split("/profile/")[-1].split("?")[0].split("/")[0]
+                elif "/user/" in username:
+                    username = username.split("/user/")[-1].split("?")[0].split("/")[0]
+    
+            username = username.strip()
+    
+            if not username or len(username) < 2:
+                raise Exception("Invalid username")
+    
+            print(f"Scraping GFG for: {username}")
+    
+            # -------- BUILD ACTIVITY URL --------
+            url = f"https://www.geeksforgeeks.org/profile/{username}?tab=activity"
+    
+            # -------- CHROME OPTIONS --------
+            options = Options()
+            options.add_argument("--headless=new")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--disable-gpu")
+    
+            driver = webdriver.Chrome(options=options)
+            wait = WebDriverWait(driver, 20)
+    
+            try:
+                driver.get(url)
+    
+                # wait until coding stats section loads
+                wait.until(
+                    EC.presence_of_element_located(
+                        (By.XPATH, "//*[contains(text(),'Problems Breakdown')]")
+                    )
                 )
-            )
-
-            time.sleep(3)
-
-            text = driver.find_element(By.TAG_NAME, "body").text
-
-            # -------- HELPER FUNCTIONS --------
-            def extract_value(label):
-                match = re.search(rf"{label}\s+(\d+)", text, re.IGNORECASE)
-                return int(match.group(1)) if match else 0
-
-            def extract_breakdown(label):
-                match = re.search(rf"{label}\s*\((\d+)\)", text, re.IGNORECASE)
-                return int(match.group(1)) if match else 0
-
-            # -------- LONGEST STREAK --------
-            longest_streak = 0
-            streak_patterns = [
-                r"Longest Streak[:\s]*(\d+)",
-                r"Longest Streak\s*(\d+)\s*Days",
-                r"(\d+)\s*Days"
-            ]
-
-            for pattern in streak_patterns:
-                match = re.search(pattern, text, re.IGNORECASE)
-                if match:
-                    longest_streak = int(match.group(1))
-                    break
-
-            return {
-                "total_problems": extract_value("Problems Solved"),
-                "basic_solved": extract_breakdown("BASIC"),
-                "easy_solved": extract_breakdown("EASY"),
-                "medium_solved": extract_breakdown("MEDIUM"),
-                "hard_solved": extract_breakdown("HARD"),
-                "contest_rating": extract_value("Coding Score"),
-                "streak": longest_streak
-            }
-
-        finally:
-            driver.quit()
-
-    except Exception as e:
-        raise Exception(f"GFG scraping failed: {str(e)}")
+    
+                time.sleep(3)
+    
+                text = driver.find_element(By.TAG_NAME, "body").text
+    
+                # -------- HELPER FUNCTIONS --------
+                def extract_value(label):
+                    match = re.search(rf"{label}\s+(\d+)", text, re.IGNORECASE)
+                    return int(match.group(1)) if match else 0
+    
+                def extract_breakdown(label):
+                    match = re.search(rf"{label}\s*\((\d+)\)", text, re.IGNORECASE)
+                    return int(match.group(1)) if match else 0
+    
+                # -------- LONGEST STREAK --------
+                longest_streak = 0
+                streak_patterns = [
+                    r"Longest Streak[:\s]*(\d+)",
+                    r"Longest Streak\s*(\d+)\s*Days",
+                    r"(\d+)\s*Days"
+                ]
+    
+                for pattern in streak_patterns:
+                    match = re.search(pattern, text, re.IGNORECASE)
+                    if match:
+                        longest_streak = int(match.group(1))
+                        break
+    
+                return {
+                    "total_problems": extract_value("Problems Solved"),
+                    "basic_solved": extract_breakdown("BASIC"),
+                    "easy_solved": extract_breakdown("EASY"),
+                    "medium_solved": extract_breakdown("MEDIUM"),
+                    "hard_solved": extract_breakdown("HARD"),
+                    "contest_rating": extract_value("Coding Score"),
+                    "streak": longest_streak
+                }
+    
+            finally:
+                driver.quit()
+    
+        except Exception as e:
+            raise Exception(f"GFG scraping failed: {str(e)}")
     
     def _scrape_github_data(self, username):
-        """Scrape GitHub data using GitHub API - showing repository and contribution stats"""
+        """Scrape GitHub data using GitHub API - repository and contribution stats"""
         try:
-            # Get user stats
+            import requests
+    
+            # -------- USERNAME CLEAN --------
+            username = username.strip().rstrip("/")
+    
+            if "github.com" in username:
+                username = username.split("github.com/")[-1].split("/")[0]
+    
+            if not username:
+                raise Exception("Invalid GitHub username")
+    
+            headers = {
+                "Accept": "application/vnd.github+json"
+            }
+    
+            # -------- GET USER DATA --------
             user_url = f"https://api.github.com/users/{username}"
-            response = requests.get(user_url, timeout=10)
-            
-            if response.status_code == 200:
-                user_data = response.json()
-                
-                # Get repositories for additional stats
-                repos_url = f"https://api.github.com/users/{username}/repos?per_page=100"
-                repos_response = requests.get(repos_url, timeout=10)
-                repos_data = repos_response.json() if repos_response.status_code == 200 else []
-                
-                # Calculate meaningful GitHub metrics
-                total_repos = user_data.get('public_repos', 0)
-                total_stars = sum(repo.get('stargazers_count', 0) for repo in repos_data)
-                total_forks = sum(repo.get('forks_count', 0) for repo in repos_data)
-                followers = user_data.get('followers', 0)
-                
-                # Count repositories by type/activity
-                active_repos = len([repo for repo in repos_data if not repo.get('fork', False)])
-                forked_repos = len([repo for repo in repos_data if repo.get('fork', False)])
-                
-                # Calculate languages used (approximate)
-                languages_count = len(set(repo.get('language') for repo in repos_data if repo.get('language')))
-                
-                return {
-                    'total_problems': total_repos,  # Total Repositories
-                    'easy_solved': active_repos,    # Original Repositories (not forks)
-                    'medium_solved': total_stars,   # Total Stars Received
-                    'hard_solved': followers,       # Followers Count
-                    'contest_rating': languages_count,  # Programming Languages Used
-                    'streak': total_forks           # Total Forks of Your Repos
-                }
-            else:
-                raise Exception(f"GitHub user '{username}' not found or API error: {response.status_code}")
-                
+            response = requests.get(user_url, headers=headers, timeout=10)
+    
+            if response.status_code != 200:
+                raise Exception(
+                    f"GitHub user '{username}' not found or API error: {response.status_code}"
+                )
+    
+            user_data = response.json()
+    
+            # -------- FETCH ALL REPOS WITH PAGINATION --------
+            repos_data = []
+            page = 1
+    
+            while True:
+                repos_url = (
+                    f"https://api.github.com/users/{username}/repos"
+                    f"?per_page=100&page={page}"
+                )
+    
+                repos_response = requests.get(repos_url, headers=headers, timeout=10)
+    
+                if repos_response.status_code != 200:
+                    break
+    
+                page_data = repos_response.json()
+    
+                if not page_data:
+                    break
+    
+                repos_data.extend(page_data)
+                page += 1
+    
+            # -------- CALCULATE METRICS --------
+            total_repos = user_data.get("public_repos", 0)
+            total_stars = sum(repo.get("stargazers_count", 0) for repo in repos_data)
+            total_forks = sum(repo.get("forks_count", 0) for repo in repos_data)
+            followers = user_data.get("followers", 0)
+    
+            active_repos = len(
+                [repo for repo in repos_data if not repo.get("fork", False)]
+            )
+    
+            languages_count = len(
+                set(repo.get("language") for repo in repos_data if repo.get("language"))
+            )
+    
+            return {
+                "total_problems": total_repos,      # Total repositories
+                "easy_solved": active_repos,        # Original repositories
+                "medium_solved": total_stars,       # Total stars
+                "hard_solved": followers,           # Followers
+                "contest_rating": languages_count,  # Languages used
+                "streak": total_forks              # Total forks
+            }
+    
         except Exception as e:
             print(f"GitHub scraping error: {e}")
             raise e
