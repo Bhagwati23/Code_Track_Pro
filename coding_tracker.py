@@ -333,68 +333,95 @@ class CodingTracker:
             return None
     
     def _scrape_geeksforgeeks_data(self, username):
-        """Scrape GeeksforGeeks using Selenium (final working)"""
+    """Scrape GeeksforGeeks using Selenium (activity tab + longest streak)"""
+    try:
+        import re
+        import time
+        from selenium import webdriver
+        from selenium.webdriver.chrome.options import Options
+        from selenium.webdriver.common.by import By
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
+
+        # -------- USERNAME / URL CLEAN --------
+        if "geeksforgeeks.org" in username:
+            if "/profile/" in username:
+                username = username.split("/profile/")[-1].split("?")[0].split("/")[0]
+            elif "/user/" in username:
+                username = username.split("/user/")[-1].split("?")[0].split("/")[0]
+
+        username = username.strip()
+
+        if not username or len(username) < 2:
+            raise Exception("Invalid username")
+
+        print(f"Scraping GFG for: {username}")
+
+        # -------- BUILD ACTIVITY URL --------
+        url = f"https://www.geeksforgeeks.org/profile/{username}?tab=activity"
+
+        # -------- CHROME OPTIONS --------
+        options = Options()
+        options.add_argument("--headless=new")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
+
+        driver = webdriver.Chrome(options=options)
+        wait = WebDriverWait(driver, 20)
+
         try:
-            import time
-            import re
-            from selenium import webdriver
-            from selenium.webdriver.chrome.options import Options
-            from selenium.webdriver.chrome.service import Service
-            from webdriver_manager.chrome import ChromeDriverManager
-    
-            # -------- USERNAME CLEAN --------
-            if 'geeksforgeeks.org' in username:
-                if '/user/' in username:
-                    username = username.split('/user/')[-1].split('/')[0]
-                elif '/profile/' in username:
-                    username = username.split('/profile/')[-1].split('/')[0]
-    
-            username = username.strip()
-    
-            if not username or len(username) < 2:
-                raise Exception("Invalid username")
-    
-            print(f"Scraping GFG for: {username}")
-    
-            # -------- CHROME OPTIONS --------
-            options = Options()
-            options.add_argument("--headless=new")
-            options.add_argument("--no-sandbox")
-            options.add_argument("--disable-dev-shm-usage")
-            options.add_argument("--disable-gpu")
-            options.add_argument("--remote-debugging-port=9222")
-            
-            driver = webdriver.Chrome(options=options)
-    
-            url = f"https://www.geeksforgeeks.org/user/{username}/"
             driver.get(url)
-    
-            time.sleep(5)
-    
-            page = driver.page_source
-            driver.quit()
-    
-            # -------- EXTRACT DATA --------
-            total = re.search(r'"total_problems_solved":\s*(\d+)', page)
-            easy = re.search(r'"easy_questions_solved":\s*(\d+)', page)
-            medium = re.search(r'"medium_questions_solved":\s*(\d+)', page)
-            hard = re.search(r'"hard_questions_solved":\s*(\d+)', page)
-            basic = re.search(r'"school_questions_solved":\s*(\d+)', page)
-            streak = re.search(r'"pod_solved_current_streak":\s*(\d+)', page)
-            score = re.search(r'"score":\s*(\d+)', page)
-    
+
+            # wait until coding stats section loads
+            wait.until(
+                EC.presence_of_element_located(
+                    (By.XPATH, "//*[contains(text(),'Problems Breakdown')]")
+                )
+            )
+
+            time.sleep(3)
+
+            text = driver.find_element(By.TAG_NAME, "body").text
+
+            # -------- HELPER FUNCTIONS --------
+            def extract_value(label):
+                match = re.search(rf"{label}\s+(\d+)", text, re.IGNORECASE)
+                return int(match.group(1)) if match else 0
+
+            def extract_breakdown(label):
+                match = re.search(rf"{label}\s*\((\d+)\)", text, re.IGNORECASE)
+                return int(match.group(1)) if match else 0
+
+            # -------- LONGEST STREAK --------
+            longest_streak = 0
+            streak_patterns = [
+                r"Longest Streak[:\s]*(\d+)",
+                r"Longest Streak\s*(\d+)\s*Days",
+                r"(\d+)\s*Days"
+            ]
+
+            for pattern in streak_patterns:
+                match = re.search(pattern, text, re.IGNORECASE)
+                if match:
+                    longest_streak = int(match.group(1))
+                    break
+
             return {
-                'total_problems': int(total.group(1)) if total else 0,
-                'basic_solved': int(basic.group(1)) if basic else 0,
-                'easy_solved': int(easy.group(1)) if easy else 0,
-                'medium_solved': int(medium.group(1)) if medium else 0,
-                'hard_solved': int(hard.group(1)) if hard else 0,
-                'contest_rating': int(score.group(1)) if score else 0,
-                'streak': int(streak.group(1)) if streak else 0
+                "total_problems": extract_value("Problems Solved"),
+                "basic_solved": extract_breakdown("BASIC"),
+                "easy_solved": extract_breakdown("EASY"),
+                "medium_solved": extract_breakdown("MEDIUM"),
+                "hard_solved": extract_breakdown("HARD"),
+                "contest_rating": extract_value("Coding Score"),
+                "streak": longest_streak
             }
-    
-        except Exception as e:
-            raise Exception(f"GFG scraping failed: {str(e)}")
+
+        finally:
+            driver.quit()
+
+    except Exception as e:
+        raise Exception(f"GFG scraping failed: {str(e)}")
     
     def _scrape_github_data(self, username):
         """Scrape GitHub data using GitHub API - showing repository and contribution stats"""
