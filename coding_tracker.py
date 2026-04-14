@@ -503,55 +503,83 @@ class CodingTracker:
             raise e
     
     def _scrape_hackerrank_data(self, username):
-        """Scrape HackerRank data"""
+        """Scrape HackerRank profile data using Selenium"""
         try:
-            # HackerRank doesn't have a public API, return mock data
-            # In production, you'd need to implement web scraping or use unofficial APIs
-            return self._generate_mock_platform_data('hackerrank')
-            
+            import re
+            import time
+            from selenium import webdriver
+            from selenium.webdriver.chrome.options import Options
+            from selenium.webdriver.common.by import By
+            from selenium.webdriver.support.ui import WebDriverWait
+            from selenium.webdriver.support import expected_conditions as EC
+    
+            # -------- USERNAME CLEAN --------
+            username = username.strip().rstrip("/")
+    
+            if "hackerrank.com" in username:
+                if "/profile/" in username:
+                    username = username.split("/profile/")[-1].split("/")[0]
+                else:
+                    username = username.split("hackerrank.com/")[-1].split("/")[0]
+    
+            if not username:
+                raise Exception("Invalid HackerRank username")
+    
+            url = f"https://www.hackerrank.com/profile/{username}"
+    
+            # -------- CHROME --------
+            options = Options()
+            options.add_argument("--headless=new")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+    
+            driver = webdriver.Chrome(options=options)
+            wait = WebDriverWait(driver, 20)
+    
+            try:
+                driver.get(url)
+    
+                # wait for profile body
+                wait.until(
+                    EC.presence_of_element_located((By.TAG_NAME, "body"))
+                )
+    
+                time.sleep(4)
+    
+                text = driver.find_element(By.TAG_NAME, "body").text
+    
+                # -------- EXTRACT BADGES --------
+                numbers = [int(x) for x in re.findall(r"\b\d+\b", text)]
+    
+                total_badges = numbers[0] if len(numbers) > 0 else 0
+                gold = numbers[1] if len(numbers) > 1 else 0
+                silver = numbers[2] if len(numbers) > 2 else 0
+                bronze = numbers[3] if len(numbers) > 3 else 0
+    
+                # -------- SKILLS COUNT --------
+                skill_matches = re.findall(
+                    r"(Problem Solving|Java|Python|SQL|C\+\+|Algorithms|Data Structures)",
+                    text,
+                    re.IGNORECASE
+                )
+                skills_count = len(set(skill_matches))
+    
+                return {
+                    "total_problems": total_badges,   # Total badges
+                    "easy_solved": gold,              # Gold badges
+                    "medium_solved": silver,          # Silver badges
+                    "hard_solved": bronze,            # Bronze badges
+                    "contest_rating": skills_count,   # Skills count
+                    "streak": 0                       # HR streak not visible publicly
+                }
+    
+            finally:
+                driver.quit()
+    
         except Exception as e:
             print(f"HackerRank scraping error: {e}")
             raise e
-    
-    def _generate_mock_platform_data(self, platform):
-        """Generate realistic mock data for platforms"""
-        base_data = {
-            'leetcode': {
-                'total_problems': random.randint(50, 500),
-                'easy_solved': random.randint(20, 150),
-                'medium_solved': random.randint(15, 200),
-                'hard_solved': random.randint(5, 100),
-                'contest_rating': random.randint(1200, 2500),
-                'streak': random.randint(0, 30)
-            },
-            'geeksforgeeks': {
-                'total_problems': random.randint(30, 300),
-                'basic_solved': random.randint(0, 20),  # Include basic problems in mock data
-                'easy_solved': random.randint(15, 100),
-                'medium_solved': random.randint(10, 150),
-                'hard_solved': random.randint(5, 80),
-                'contest_rating': 0,
-                'streak': random.randint(0, 20)
-            },
-            'hackerrank': {
-                'total_problems': random.randint(25, 200),
-                'easy_solved': random.randint(10, 80),
-                'medium_solved': random.randint(8, 100),
-                'hard_solved': random.randint(2, 50),
-                'contest_rating': random.randint(800, 2000),
-                'streak': random.randint(0, 15)
-            },
-            'github': {
-                'total_problems': random.randint(10, 100),  # Repositories
-                'easy_solved': random.randint(50, 500),    # Commits this year
-                'medium_solved': random.randint(5, 50),    # Pull requests
-                'hard_solved': random.randint(1, 20),      # Major contributions
-                'contest_rating': 0,
-                'streak': random.randint(0, 100)  # Contribution streak
-            }
-        }
-        
-        return base_data.get(platform, base_data['leetcode'])
     
     def _add_sample_problems(self, platform):
         """Add sample problems for the platform if they don't exist"""
