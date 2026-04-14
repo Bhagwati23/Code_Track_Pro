@@ -158,8 +158,12 @@ def dashboard():
     study_sessions = StudySession.query.filter_by(user_id=user.id).order_by(StudySession.started_at.desc()).all()
     
     # Calculate total problems solved
-    total_problems = sum(stat.total_problems or 0 for stat in platform_stats)
-    
+    total_problems = sum(
+        (stat.total_problems or 0)
+        for stat in platform_stats
+        if stat.platform_name.lower() in ["leetcode", "geeksforgeeks"]
+    )
+        
     # Calculate total study time
     total_study_time = sum(session.duration or 0 for session in study_sessions)
     
