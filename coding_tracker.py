@@ -33,50 +33,51 @@ class CodingTracker:
         }
     
     def sync_platform_data(self, user_id, platform, username):
-        """Sync data from a coding platform with real data scraping"""
+        """Sync data from coding platform with real scraping only"""
         if platform not in self.platforms:
             raise ValueError(f"Unsupported platform: {platform}")
-        
+    
         try:
-            # Try to get real data first
-            if platform == 'leetcode':
+            # -------- REAL SCRAPERS ONLY --------
+            if platform == "leetcode":
                 platform_data = self._scrape_leetcode_data(username)
-            elif platform == 'geeksforgeeks':
+            elif platform == "geeksforgeeks":
                 platform_data = self._scrape_geeksforgeeks_data(username)
-            elif platform == 'github':
+            elif platform == "github":
                 platform_data = self._scrape_github_data(username)
-            elif platform == 'hackerrank':
+            elif platform == "hackerrank":
                 platform_data = self._scrape_hackerrank_data(username)
             else:
-                # Fallback to mock data if scraping not available
-                platform_data = self._generate_mock_platform_data(platform)
+                raise ValueError(f"Unsupported platform: {platform}")
+    
         except Exception as e:
             print(f"Error scraping {platform} data for {username}: {e}")
-            # Fallback to mock data on error
-            platform_data = self._generate_mock_platform_data(platform)
-        
-        # Update or create platform stats
-        stats = PlatformStats.query.filter_by(user_id=user_id, platform=platform).first()
+            raise e
+    
+        # -------- UPDATE / CREATE STATS --------
+        stats = PlatformStats.query.filter_by(
+            user_id=user_id,
+            platform=platform
+        ).first()
+    
         if not stats:
             stats = PlatformStats()
             stats.user_id = user_id
             stats.platform = platform
             db.session.add(stats)
-        
-        # Update stats with scraped data
-        stats.total_problems = platform_data['total_problems']
-        stats.basic_solved = platform_data.get('basic_solved', 0)  # Include basic problems
-        stats.easy_solved = platform_data['easy_solved']
-        stats.medium_solved = platform_data['medium_solved']
-        stats.hard_solved = platform_data['hard_solved']
-        stats.contest_rating = platform_data.get('contest_rating', 0)
-        stats.streak = platform_data.get('streak', 0)
+    
+        stats.total_problems = platform_data["total_problems"]
+        stats.basic_solved = platform_data.get("basic_solved", 0)
+        stats.easy_solved = platform_data["easy_solved"]
+        stats.medium_solved = platform_data["medium_solved"]
+        stats.hard_solved = platform_data["hard_solved"]
+        stats.contest_rating = platform_data.get("contest_rating", 0)
+        stats.streak = platform_data.get("streak", 0)
         stats.last_updated = datetime.utcnow()
-        
-        # Add some sample problems if they don't exist (not for GitHub)
-        if platform != 'github':
+    
+        if platform != "github":
             self._add_sample_problems(platform)
-        
+    
         db.session.commit()
         return stats
     
