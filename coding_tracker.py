@@ -90,7 +90,7 @@ class CodingTracker:
             query = """
             query userProfile($username: String!) {
                 matchedUser(username: $username) {
-                    submitStats {
+                    submitStats: submitStatsGlobal {
                         acSubmissionNum {
                             difficulty
                             count
@@ -99,6 +99,11 @@ class CodingTracker:
                     profile {
                         ranking
                         realName
+                    }
+                    userCalendar {
+                        submissionCalendar
+                        streak
+                        totalActiveDays
                     }
                 }
             }
@@ -138,7 +143,44 @@ class CodingTracker:
                 
                 profile_info = user_data.get('profile', {})
                 ranking = profile_info.get('ranking', 0) if profile_info else 0
-            
+
+                # Method 1: Use streak directly from userCalendar API field
+                calendar = user_data.get('userCalendar', {})
+                if calendar:
+                    api_streak = calendar.get('streak', 0)
+                    if api_streak and api_streak > 0:
+                        streak = api_streak
+                        print(f"Got streak from API: {streak}")
+
+                # Method 2: Compute from submissionCalendar if API streak is 0
+                if streak == 0 and calendar:
+                    submission_calendar = calendar.get('submissionCalendar', '{}')
+                    try:
+                        import json as _json
+                        from datetime import datetime, timedelta, timezone
+                        submissions = _json.loads(submission_calendar)
+                        if submissions:
+                            active_days = set()
+                            for ts in submissions:
+                                dt = datetime.fromtimestamp(int(ts), tz=timezone.utc).date()
+                                active_days.add(dt)
+                            if active_days:
+                                today = datetime.now(timezone.utc).date()
+                                current_streak = 0
+                                check_day = today
+                                while check_day in active_days:
+                                    current_streak += 1
+                                    check_day -= timedelta(days=1)
+                                if current_streak == 0:
+                                    check_day = today - timedelta(days=1)
+                                    while check_day in active_days:
+                                        current_streak += 1
+                                        check_day -= timedelta(days=1)
+                                streak = current_streak
+                                print(f"Computed streak from submissionCalendar: {streak}")
+                    except Exception as cal_err:
+                        print(f"Error computing streak from calendar: {cal_err}")
+                        streak = 0
             
             return {
                 'total_problems': easy_solved + medium_solved + hard_solved,
