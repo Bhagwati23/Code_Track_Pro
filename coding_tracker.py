@@ -139,19 +139,6 @@ class CodingTracker:
                 profile_info = user_data.get('profile', {})
                 ranking = profile_info.get('ranking', 0) if profile_info else 0
             
-            # Enhanced streak scraping using requests with better session management
-            try:
-                print(f"Scraping LeetCode streak for user: {username}")
-                streak = self._scrape_leetcode_streak_enhanced(username)
-                if streak is not None:
-                    print(f"Successfully scraped LeetCode streak: {streak}")
-                else:
-                    print("Could not scrape streak data, using fallback")
-                    streak = 0
-                    
-            except Exception as e:
-                print(f"Error in enhanced streak scraping: {e}")
-                streak = 0
             
             return {
                 'total_problems': easy_solved + medium_solved + hard_solved,
