@@ -161,7 +161,7 @@ def dashboard():
     total_problems = sum(
         (stat.total_problems or 0)
         for stat in platform_stats
-        if stat.platform_name.lower() in ["leetcode", "geeksforgeeks"]
+        if stat.platform.lower() in ["leetcode", "geeksforgeeks"]
     )
         
     # Calculate total study time
