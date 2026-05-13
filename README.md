@@ -1,7 +1,11 @@
 <h1 align="center">🚀 CODE-TRACK-PRO</h1>
 
 <p align="center">
-   Track your coding progress, generate study plans, execute code online, and accelerate your learning journey — all in one platform.
+   Track coding progress across platforms, monitor GitHub activity, join coding contests, generate AI-powered study plans, and accelerate your learning journey — all in one platform.
+</p>
+
+<p align="center">
+   🌐 <b>Live Demo:</b> <a href="https://codetrackpro.onrender.com">https://codetrackpro.onrender.com</a>
 </p>
 
 <p align="center">
@@ -13,151 +17,151 @@
 
 ---
 
-## 📌 About the Project
+# 🌟 CODE-TRACK-PRO
 
-**CODE-TRACK-PRO** is a web-based coding assistant & progress tracker built using **Flask + Python**.  
-It helps users:
+> A complete AI-powered coding productivity & learning platform built for students, developers, and competitive programmers.
 
-- Track coding progress over time  
-- Execute code instantly in multiple languages (Python/C++)  
-- Generate personalized study plans  
-- Access AI-powered flashcards & tutoring features  
-- Join study groups & collaborate  
-- View coding stats & activity analytics  
-- And more…
+CODE-TRACK-PRO helps users track coding consistency, monitor progress from platforms like **LeetCode, GeeksforGeeks, HackerRank, and GitHub**, participate in coding contests, and improve problem-solving skills using AI-powered learning tools.
 
-This project is designed for students, developers, and anyone serious about improving their problem-solving skills.
+Designed with scalability, clean architecture, and developer productivity in mind, this project demonstrates practical full-stack development using **Flask, Python, HTML, CSS, JavaScript and Prostgre SQL Database**.
 
 ---
 
-## ✨ Features
+# 📌 Why CODE-TRACK-PRO?
 
-### 📈 **Progress Tracking**
-- Tracks coding activity & solved problems  
-- Analytics dashboard to measure growth  
-- Daily/weekly/monthly progress summaries  
+Most learners use multiple platforms for coding practice, but tracking consistency and progress across all of them becomes difficult.
 
-### ⚙️ **Code Execution Engine**
-- Run Python / C++ code inside the platform  
-- Safe, isolated execution environment  
-- Input/output support  
+CODE-TRACK-PRO solves this by bringing everything together in one place:
 
-### 🧠 **AI-Powered Tools**
-- Flashcard generator  
-- AI tutor (concept explanations & guidance)  
-- Personalized study plan creator  
-
-### 👥 **Study Group Matcher**
-- Suggests peers with similar goals  
-- Encourages collaborative learning  
-
-### 🎨 **Frontend Features**
-- Clean UI with HTML/CSS/JS  
-- Responsive on all devices  
-- Easy navigation between modules  
+✅ Coding progress tracking  
+✅ Competitive programming support  
+✅ Coding contest management  
+✅ GitHub activity monitoring  
+✅ AI-powered learning assistance  
+✅ Personalized study planning  
+✅ Collaborative study features  
 
 ---
 
-## 🗂️ Project Structure
+# ✨ Key Features
+
+## 📊 Multi-Platform Coding Progress Tracking
+
+Track and analyze coding activity from:
+
+- LeetCode
+- GeeksforGeeks (GFG)
+- HackerRank
+- GitHub
+
+Features include:
+
+- Problem-solving streak tracking
+- Daily/weekly/monthly analytics
+- Coding consistency insights
+- GitHub contribution monitoring
+- Progress visualization dashboard
+- Performance growth reports
+
+---
+
+## 🏆 Coding Contest Module
+
+Instead of a traditional code execution page, CODE-TRACK-PRO provides a dedicated **Coding Contest System** where users can:
+
+- Participate in coding contests
+- Solve real-time challenges
+- Compete with peers
+- Improve competitive programming skills
+- Practice under time constraints
+
+This makes the platform more engaging and industry-oriented.
+
+---
+
+## 🧠 AI-Powered Learning Tools
+
+### 🤖 AI Tutor
+- Explains coding concepts
+- Helps users understand difficult problems
+- Provides guided learning assistance
+
+### 📝 AI Flashcard Generator
+- Generates quick revision flashcards
+- Helps with interview preparation
+- Improves concept retention
+
+### 📚 Personalized Study Plans
+- Creates customized learning roadmaps
+- Adapts to user goals and skill level
+- Helps maintain coding discipline
+
+---
+
+## 👥 Study Group Matcher
+
+Collaborative learning features:
+
+- Match users with similar coding goals
+- Create study partnerships
+- Encourage accountability & teamwork
+- Improve learning consistency
+
+---
+
+## 📈 Analytics Dashboard
+
+Advanced tracking system with:
+
+- Coding heatmaps
+- Activity charts
+- Contest performance stats
+- Platform-wise analysis
+- Productivity insights
+
+---
+
+## 🎨 Modern Frontend Experience
+
+- Responsive UI for all devices
+- Clean and intuitive navigation
+- Fast and lightweight interface
+- Built using HTML, CSS, and JavaScript
+
+---
+
+# 🏗️ Tech Stack
+
+| Category | Technologies |
+|---|---|
+| Backend | Flask, Python |
+| Frontend | HTML, CSS, JavaScript |
+| Database | PostgreSQL / Future DB Integration |
+| AI Features | Python-based AI utilities |
+| Deployment | Render |
+| Version Control | Git & GitHub |
+
+---
+
+# 🗂️ Project Structure
 
 ```text
 CODE-TRACK-PRO/
 │
 ├── app.py                      # Main Flask application
-├── routes.py                   # App routes
+├── routes.py                   # Application routes
 ├── models.py                   # Database models
-├── code_executor.py            # Code execution logic
-├── coding_tracker.py           # Progress tracker
+├── coding_tracker.py           # Multi-platform progress tracking
+├── contest_manager.py          # Coding contest system
 ├── ai_tutor.py                 # AI tutor features
 ├── ai_flashcard_generator.py   # Flashcard generator
-├── notification_service.py     # Optional: reminder/notification system
+├── study_plan_generator.py     # Personalized study planner
 ├── study_group_matcher.py      # Study-group matching logic
+├── github_tracker.py           # GitHub activity monitoring
+├── notification_service.py     # Reminder/notification service
 │
 ├── templates/                  # HTML templates
 ├── static/                     # CSS, JS, images
 │
 ├── requirements.txt
 └── README.md
-```
-
----
-
-## 🛠️ Installation & Setup
-
-### 1️⃣ Clone the repository
-```bash
-git clone https://github.com/manojk909/CODE-TRACK-PRO.git
-cd CODE-TRACK-PRO
-```
-
-### 2️⃣ Create & activate virtual environment
-
-```bash
-python -m venv venv
-source venv/bin/activate        # macOS/Linux
-venv\Scripts\activate           # Windows
-```
-
-### 3️⃣ Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4️⃣ Run the application
-
-```bash
-python app.py
-```
-
-Visit: **[http://localhost:5000](https://codetrackpro.onrender.com)**
-
----
-
----
-
-## 🚀 Roadmap
-
-* [ ] Add user authentication (login/signup)
-* [ ] Add database for persistent tracking
-* [ ] Improve analytics dashboard
-* [ ] Add more AI-driven learning tools
-* [ ] Add support for more programming languages
-* [ ] Add Leaderboard + Competitive mode
-* [ ] Deploy on Render/Vercel
-
----
-
-## 🐞 Known Issues
-
-* Some AI features may need API keys
-* Code execution may have language restrictions
-* Notification service may require cron configuration
-
----
-
-## 👨‍💻 Contributing
-
-Contributions are welcome!
-To contribute:
-
-1. Fork the repo
-2. Create a new branch
-3. Commit changes
-4. Submit a pull request
-
-Feel free to open issues for bugs, features, or improvements.
-
----
-
-
-## 📬 Contact
-
-If you have questions or suggestions, feel free to reach out:
-**GitHub:** [https://github.com/Bhagwati23](https://github.com/Bhagwati23)
-
----
-
-### ⭐ If you like this project, give it a star on GitHub — it motivates further development!
-
-```
